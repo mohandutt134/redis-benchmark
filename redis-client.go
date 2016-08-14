@@ -8,7 +8,7 @@ import (
 )
 
 func echoEngine(host_port string) *G.Gilmour {
-	redis := backends.MakeRedis(host_port, "")
+	redis := backends.MakeRedis("127.0.0.1:6379", "")
 	engine := G.Get(redis)
 	return engine
 }

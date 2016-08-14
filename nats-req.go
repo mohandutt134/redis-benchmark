@@ -44,6 +44,7 @@ func main() {
 		select {
 		case <-time.After(10 * time.Second):
 			fmt.Println("Total requests processed = ", counter)
+			counter = 0
 		}
 	}
 }
