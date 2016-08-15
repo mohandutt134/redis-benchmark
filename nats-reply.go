@@ -22,7 +22,6 @@ func main() {
 
 	nc.QueueSubscribe(subj, "worker_group", func(msg *nats.Msg) {
 		i++
-		fmt.Println(msg, i)
 		nc.Publish(msg.Reply, []byte(fmt.Sprintf("%s_%s", msg.Data, reply)))
 	})
 

@@ -1,55 +1,57 @@
 package main
 
 import (
-	G "github.com/gilmour-libs/gilmour-e-go"
-	"gopkg.in/gilmour-libs/gilmour-e-go.v4/backends"
+	G "../gilmour-e-go"
+	"../gilmour-e-go/backends"
 	"log"
 	"time"
+	"sync/atomic"
+	"fmt"
 )
 
-func echoEngine(host_port string) *G.Gilmour {
-	redis := backends.MakeRedis("127.0.0.1:6379", "")
+func echoEngine() *G.Gilmour {
+	redis := backends.MakeRedisSentinel("mymaster", "", []string{":16380", ":16381", ":16382"})
 	engine := G.Get(redis)
 	return engine
 }
 
-func ExecuteRequest(request *G.RequestComposer, count *int) {
-	req_msg := G.NewMessage()
+func ExecuteRequest(request *G.RequestComposer, msg string, counter *int64) {
+	req_msg := G.NewMessage().SetData(msg)
 	resp, err := request.Execute(req_msg)
 
-	if resp == nil {
-		log.Println("nil response due to ", err)
+	if resp == nil || err != nil{
+		log.Println("Error Occured: ", err)
+		return
 	}
 
-	msg := resp.Next()
-
-	var data string
-	msg.GetData(&data)
-	log.Println(data)
 	atomic.AddInt64(counter, 1)
 }
 
 func main() {
-	e1 := echoEngine("127.0.0.1:7000")
-	e1.Start()
+	e := echoEngine()
+	e.Start()
 
-	request1 := e1.NewRequest("test.handler.one")
+	request := e.NewRequest("test.handler.one")
 
-	count := 0
+	var counter int64
 
-	for i := 0; i < 50; i += 1 {
-		go func(count *int64, request *G.RequestComposer) {
+	for i := 0; i < 1; i += 1 {
+		go func(counter *int64, request *G.RequestComposer, i int) {
+			j := 0
 			for {
-				ExecuteRequest(request, count)
+				payload := fmt.Sprintf("foo_%d_%d", i, j)
+
+				ExecuteRequest(request, payload, counter)
+				j += 1
 			}
-		}(&count, request1)
+		}(&counter, request, i)
 	}
 
 	for {
 		select {
 		case <-time.After(10 * time.Second):
-			fmt.Println("Total requests processed in 10 seconds = ", count)
-			count = 0
+			log.Println("Total requests processed in 10 seconds = ", counter)
+			counter = 0
 		}
 	}
 }

@@ -22,7 +22,7 @@ func main() {
 
 	var counter int64
 
-	for i := 0; i < 50; i += 1 {
+	for i := 0; i < 1000; i += 1 {
 		go func(i int, sub string, payload_arg string, nc *nats.Conn, counter *int64) {
 			j := 1
 			for {

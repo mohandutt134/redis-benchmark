@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	G "github.com/gilmour-libs/gilmour-e-go"
-	"gopkg.in/gilmour-libs/gilmour-e-go.v4/backends"
+	G "../gilmour-e-go"
+	"../gilmour-e-go/backends"
 	"log"
 	"sync"
 )
 
-func echoEngine(host_port string) *G.Gilmour {
-	redis := backends.MakeRedis("127.0.0.1:6379", "")
+func echoEngine() *G.Gilmour {
+	redis := backends.MakeRedisSentinel("mymaster", "", []string{":16380", ":16381", ":16382"})
 	engine := G.Get(redis)
 	return engine
 }
@@ -17,14 +17,14 @@ func echoEngine(host_port string) *G.Gilmour {
 //Fetch a remote file from the URL received in Request.
 func fetchReply(g *G.Gilmour) func(req *G.Request, resp *G.Message) {
 	return func(req *G.Request, resp *G.Message) {
-		var num int
-		if err := req.Data(&num); err != nil {
+		var data string
+		if err := req.Data(&data); err != nil {
 			panic(err)
 		}
 
 		//Send back the contents.
-		log.Println("Responding to ", num)
-		resp.SetData(fmt.Sprint("Response of %d", num))
+		log.Println("Responding to ", data)
+		resp.SetData(fmt.Sprint("%s_bar", data))
 	}
 }
 
@@ -34,7 +34,7 @@ func bindListener(g *G.Gilmour) {
 }
 
 func main() {
-	engine := echoEngine("127.0.0.1:7000")
+	engine := echoEngine()
 	bindListener(engine)
 	engine.Start()
 	var wg sync.WaitGroup
