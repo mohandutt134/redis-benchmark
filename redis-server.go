@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	G "../gilmour-e-go"
-	"../gilmour-e-go/backends"
+	G "gopkg.in/gilmour-libs/gilmour-e-go.v4"
+	"gopkg.in/gilmour-libs/gilmour-e-go.v4/backends"
 	"log"
 	"sync"
 )
 
 func echoEngine() *G.Gilmour {
-	redis := backends.MakeRedisSentinel("mymaster", "", []string{":16380", ":16381", ":16382"})
+	// redis := backends.MakeRedisSentinel("mymaster", "", []string{":16380", ":16381", ":16382"})
+	redis := backends.MakeRedis("127.0.0.1:6379", "")
 	engine := G.Get(redis)
 	return engine
 }
